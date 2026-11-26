@@ -1,5 +1,7 @@
 """Deterministic, offline FAQ retrieval using NLTK + TF-IDF cosine similarity."""
 import re
+import os
+import numpy as np
 from dataclasses import dataclass
 from typing import Any
 
@@ -45,14 +47,24 @@ class FAQEngine:
         )
         corpus = [" ".join([faq["question"], *faq.get("alternatives", [])]) for faq in faqs]
         self.matrix = self.vectorizer.fit_transform(corpus)
+        self.semantic = None
+        self.embeddings = None
+        if os.getenv('QUERYMIND_SEMANTIC') == '1':
+            from sentence_transformers import SentenceTransformer
+            self.semantic = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+            self.embeddings = self.semantic.encode(corpus, normalize_embeddings=True)
 
     def search(self, question: str, category: str | None = None, limit: int = 3) -> list[Match]:
-        if not preprocess(question):
+        if not question.strip() or (not self.semantic and not preprocess(question)):
             return []
         query = self.vectorizer.transform([question])
-        if query.nnz == 0:
+        if query.nnz == 0 and self.semantic is None:
             return []
         scores = cosine_similarity(query, self.matrix)[0]
+        if self.semantic is not None:
+            embedding = self.semantic.encode([question], normalize_embeddings=True)[0]
+            semantic = np.clip(self.embeddings @ embedding, 0, 1)
+            scores = 0.25 * scores + 0.75 * semantic
         matches = [
             Match(faq, round(float(scores[index]), 4))
             for index, faq in enumerate(self.faqs)
@@ -64,8 +76,9 @@ class FAQEngine:
     def respond(self, question: str, category: str | None = None) -> dict[str, Any]:
         matches = self.search(question, category)
         best = matches[0] if matches else None
-        confident = best is not None and best.score >= self.threshold
+        confident = best is not None and best.score >= (max(self.threshold, 0.45) if self.semantic is not None else self.threshold)
         return {
+            "engine": "hybrid" if self.semantic is not None else "tfidf",
             "answer": best.faq["answer"] if confident else
                 "I couldn't find a reliable answer to that question. Try rephrasing it or selecting one of the suggested FAQs.",
             "matched_question": best.faq["question"] if confident else None,
