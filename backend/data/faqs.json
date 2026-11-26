@@ -1,0 +1,202 @@
+[
+  {
+    "id": 1,
+    "category": "account",
+    "question": "How can I create an account?",
+    "answer": "Select Sign up, enter your name and email, choose a secure password, and verify your email address.",
+    "alternatives": [
+      "register for an account",
+      "sign up create profile"
+    ]
+  },
+  {
+    "id": 2,
+    "category": "account",
+    "question": "How do I reset my password?",
+    "answer": "On the login page, select Forgot password and follow the reset link sent to your registered email.",
+    "alternatives": [
+      "forgotten password recover access",
+      "change forgotten login password"
+    ]
+  },
+  {
+    "id": 3,
+    "category": "account",
+    "question": "How can I change my email address?",
+    "answer": "Open Account Settings, select Email, update your address, and complete the verification step.",
+    "alternatives": [
+      "update registered email",
+      "edit email in my profile"
+    ]
+  },
+  {
+    "id": 4,
+    "category": "account",
+    "question": "How do I delete my account?",
+    "answer": "Go to Account Settings and request account deletion. Review the confirmation carefully because deletion may be irreversible.",
+    "alternatives": [
+      "close account permanently",
+      "remove my profile"
+    ]
+  },
+  {
+    "id": 5,
+    "category": "account",
+    "question": "Why can't I sign in?",
+    "answer": "Check your email and password, try resetting your password, and confirm your account is verified.",
+    "alternatives": [
+      "login is not working",
+      "cannot access my account"
+    ]
+  },
+  {
+    "id": 6,
+    "category": "billing",
+    "question": "What payment methods are accepted?",
+    "answer": "This demo store supports commonly used credit and debit cards. Check the checkout page for the available methods in your region.",
+    "alternatives": [
+      "pay by card",
+      "accepted payment options"
+    ]
+  },
+  {
+    "id": 7,
+    "category": "billing",
+    "question": "How can I get a refund?",
+    "answer": "Open your order details and select Request Refund. Eligibility depends on the store policy and order status.",
+    "alternatives": [
+      "refund my money",
+      "return payment for purchase"
+    ]
+  },
+  {
+    "id": 8,
+    "category": "billing",
+    "question": "Where can I download my invoice?",
+    "answer": "Open Billing or Order History, choose the relevant order, and select Download Invoice.",
+    "alternatives": [
+      "get a receipt",
+      "download billing document"
+    ]
+  },
+  {
+    "id": 9,
+    "category": "billing",
+    "question": "How do I update my payment details?",
+    "answer": "Open Billing Settings and select Update Payment Method. Never share full card details in chat.",
+    "alternatives": [
+      "change saved card",
+      "edit billing card"
+    ]
+  },
+  {
+    "id": 10,
+    "category": "billing",
+    "question": "Why did my payment fail?",
+    "answer": "Verify your card details, available balance, and bank approval. You can retry or use another supported method.",
+    "alternatives": [
+      "payment declined",
+      "checkout transaction failed"
+    ]
+  },
+  {
+    "id": 11,
+    "category": "orders",
+    "question": "How do I track my order?",
+    "answer": "Open Order History and select Track Order to view its latest delivery status.",
+    "alternatives": [
+      "where is my order",
+      "track my shipment"
+    ]
+  },
+  {
+    "id": 12,
+    "category": "orders",
+    "question": "Can I cancel my order?",
+    "answer": "Go to Order History and choose Cancel Order if the order has not entered fulfillment.",
+    "alternatives": [
+      "cancel a purchase",
+      "stop an order"
+    ]
+  },
+  {
+    "id": 13,
+    "category": "orders",
+    "question": "Can I change my delivery address?",
+    "answer": "Open your order and check whether Edit Address is available. Once shipped, address changes may not be possible.",
+    "alternatives": [
+      "modify shipping location",
+      "update delivery address"
+    ]
+  },
+  {
+    "id": 14,
+    "category": "orders",
+    "question": "How long does delivery take?",
+    "answer": "Estimated delivery times are displayed at checkout and in your order confirmation.",
+    "alternatives": [
+      "shipping time estimate",
+      "when will my package arrive"
+    ]
+  },
+  {
+    "id": 15,
+    "category": "orders",
+    "question": "What should I do if an item arrives damaged?",
+    "answer": "Document the damage with photos and contact support through your order details to request assistance.",
+    "alternatives": [
+      "damaged product received",
+      "broken item delivered"
+    ]
+  },
+  {
+    "id": 16,
+    "category": "support",
+    "question": "How do I contact customer support?",
+    "answer": "Visit the Help Center and choose Contact Support to submit your request.",
+    "alternatives": [
+      "talk to support team",
+      "reach customer service"
+    ]
+  },
+  {
+    "id": 17,
+    "category": "support",
+    "question": "What are your support hours?",
+    "answer": "This is a demonstration FAQ chatbot. Actual support hours depend on the business using it.",
+    "alternatives": [
+      "when is support available",
+      "customer service opening times"
+    ]
+  },
+  {
+    "id": 18,
+    "category": "support",
+    "question": "How can I report a bug?",
+    "answer": "Use the Help Center's Report a Problem option and include steps to reproduce the issue.",
+    "alternatives": [
+      "submit a software bug",
+      "website error report"
+    ]
+  },
+  {
+    "id": 19,
+    "category": "support",
+    "question": "Can I speak to a human agent?",
+    "answer": "You can request a human agent through the Help Center if your organization provides that service.",
+    "alternatives": [
+      "human representative",
+      "talk to a real person"
+    ]
+  },
+  {
+    "id": 20,
+    "category": "support",
+    "question": "Is my conversation saved?",
+    "answer": "In this demo, your conversation is held in your browser session. The FAQ API does not store your messages.",
+    "alternatives": [
+      "chat privacy retention",
+      "do you store my messages"
+    ]
+  }
+]
