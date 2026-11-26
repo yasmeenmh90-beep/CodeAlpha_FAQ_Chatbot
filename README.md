@@ -4,6 +4,13 @@
 
 QueryMind is a responsive FAQ assistant that uses **NLTK preprocessing**, **TF-IDF vectorization**, and **cosine similarity** to retrieve relevant answers from a curated knowledge base. It operates locally without paid API credentials.
 
+## V2 interface upgrade
+
+- Animated assistant orb, orbital rings, message transitions and responsive luminous styling.
+- Light/dark themes and conversation history stored in browser localStorage.
+- Browser speech recognition (where supported and permitted), speech synthesis, transcript downloads and per-message feedback held in session state.
+- Reduced-motion support. Browser speech recognition may use a browser vendor's external speech service.
+
 ## Features
 
 - 🧠 NLP cleaning, tokenization, stemming, stop-word removal
