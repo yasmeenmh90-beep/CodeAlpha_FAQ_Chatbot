@@ -1,9 +1,13 @@
 """QueryMind FAQ service: no paid API keys, no external inference calls."""
 import json
+import os
+import secrets
+import tempfile
+from threading import RLock
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -15,8 +19,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "PUT"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
@@ -55,3 +59,60 @@ def chat(request: ChatRequest):
     if request.category != "all" and request.category not in categories:
         raise HTTPException(status_code=422, detail="Unknown category")
     return get_engine().respond(request.message, request.category)
+
+
+# Administrative replacement of the complete knowledge base.
+_admin_lock = RLock()
+
+
+class FAQRecord(BaseModel):
+    id: str | int
+    question: str = Field(min_length=1, max_length=1500)
+    answer: str = Field(min_length=1, max_length=10000)
+    category: str = Field(min_length=1, max_length=40)
+    alternatives: list[str] = Field(default_factory=list, max_length=30)
+
+
+class KnowledgeUpdate(BaseModel):
+    faqs: list[FAQRecord] = Field(min_length=1, max_length=2000)
+
+
+def require_admin(authorization: str = ""):
+    token = os.getenv("QUERYMIND_ADMIN_TOKEN")
+    if not token:
+        raise HTTPException(503, "Administration is disabled")
+    if not secrets.compare_digest(authorization.encode(), ("Bearer " + token).encode()):
+        raise HTTPException(401, "Invalid administration token")
+
+
+@app.get("/api/admin/faqs")
+def admin_faqs(authorization: str = Header(default="")):
+    require_admin(authorization)
+    with _admin_lock:
+        return {"faqs": get_engine().faqs}
+
+
+@app.put("/api/admin/faqs")
+def replace_faqs(request: KnowledgeUpdate, authorization: str = Header(default="")):
+    require_admin(authorization)
+    rows = [item.model_dump() for item in request.faqs]
+    if len({str(row["id"]) for row in rows}) != len(rows):
+        raise HTTPException(422, "Duplicate FAQ IDs")
+    if len({row["question"].strip().casefold() for row in rows}) != len(rows):
+        raise HTTPException(422, "Duplicate questions")
+    with _admin_lock:
+        try:
+            FAQEngine(rows)
+        except ValueError as exc:
+            raise HTTPException(422, "Knowledge base cannot be indexed") from exc
+        temp = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=DATA_FILE.parent, delete=False) as stream:
+                temp = Path(stream.name)
+                json.dump(rows, stream, ensure_ascii=False, indent=2)
+            os.replace(temp, DATA_FILE)
+            get_engine.cache_clear()
+        finally:
+            if temp is not None:
+                temp.unlink(missing_ok=True)
+    return {"status": "updated", "faq_count": len(rows)}
