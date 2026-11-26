@@ -1,0 +1,72 @@
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight, Bot, Check, ChevronDown, CircleHelp, Command, Github, Lightbulb, Menu, MessageCircle, Plus, Send, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react'
+
+type FAQ = { id: number; question: string; category: string }
+type Reply = { answer: string; matched_question: string | null; confidence: number; matched: boolean; category: string | null; suggestions: string[] }
+type Message = { id: number; role: 'user' | 'assistant'; text: string; match?: Reply }
+const API = import.meta.env.VITE_API_URL || ''
+const welcome: Message = { id: 0, role: 'assistant', text: "Hey there! 👋 I'm QueryMind, your intelligent support assistant. Ask me about your account, billing, orders, or support — I'm here to help." }
+const starters = ['How do I reset my password?', 'How do I track my order?', 'What payment methods are accepted?', 'How do I contact support?']
+
+export default function App() {
+  const [messages, setMessages] = useState<Message[]>([welcome])
+  const [input, setInput] = useState('')
+  const [faqs, setFaqs] = useState<FAQ[]>([])
+  const [category, setCategory] = useState('all')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [menu, setMenu] = useState(false)
+  const [showFaqs, setShowFaqs] = useState(false)
+  const [search, setSearch] = useState('')
+  const [copied, setCopied] = useState(false)
+  const endRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    fetch(`${API}/api/faqs`).then(r => { if (!r.ok) throw new Error('Unable to load FAQs'); return r.json() })
+      .then(d => setFaqs(d.faqs)).catch(() => setError('Backend is offline. Start the API to enable real answers.'))
+  }, [])
+  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, loading])
+  const categories = ['all', ...Array.from(new Set(faqs.map(f => f.category)))]
+  async function send(message = input) {
+    const text = message.trim()
+    if (!text || loading || text.length > 1500) return
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text }])
+    setInput('')
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`${API}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, category }) })
+      if (!response.ok) throw new Error('The service could not process your request.')
+      const result: Reply = await response.json()
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', text: result.answer, match: result }])
+    } catch {
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', text: 'Connection error — please check that the FAQ backend is running and try again.' }])
+      setError('Connection to the API failed.')
+    } finally { setLoading(false) }
+  }
+  function clearChat() { setMessages([welcome]); setError(''); setMenu(false) }
+  const filtered = faqs.filter(f => (category === 'all' || f.category === category) && f.question.toLowerCase().includes(search.toLowerCase()))
+  const answered = messages.filter(m => m.role === 'assistant' && m.match?.matched).length
+  const attempts = messages.filter(m => m.role === 'user').length
+  return <div className="shell">
+    <aside className={`sidebar ${menu ? 'open' : ''}`}>
+      <div className="brand"><div className="brandIcon"><Sparkles size={21}/></div><div><strong>querymind<span>.ai</span></strong><small>INTELLIGENT SUPPORT</small></div><button className="iconButton mobileClose" aria-label="Close menu" onClick={() => setMenu(false)}><X size={18}/></button></div>
+      <div className="sidebarGroup"><div className="sideLabel">WORKSPACE</div><button className="navItem active" onClick={() => { setShowFaqs(false); setMenu(false) }}><MessageCircle size={18}/> AI Assistant <span className="navPill">LIVE</span></button><button className="navItem" onClick={() => { setShowFaqs(true); setMenu(false) }}><CircleHelp size={18}/> FAQ Library <span className="count">{faqs.length}</span></button></div>
+      <div className="sidebarGroup"><div className="sideLabel">TOPICS</div>{categories.map(cat => <button key={cat} className={`navItem topic ${category === cat ? 'selected' : ''}`} onClick={() => { setCategory(cat); setMenu(false) }}><span className="topicDot"/>{cat === 'all' ? 'All topics' : cat[0].toUpperCase() + cat.slice(1)}{category === cat && <Check size={15}/>}</button>)}</div>
+      <div className="sidebarBottom"><div className="miniCard"><div className="miniBadge"><Lightbulb size={14}/> DID YOU KNOW?</div><p>QueryMind finds relevant answers with NLP — no paid AI API needed.</p></div><a className="github" href="https://github.com/yasmeenmh90-beep/CodeAlpha_FAQ_Chatbot" target="_blank" rel="noreferrer"><Github size={17}/> View on GitHub <ArrowRight size={15}/></a></div>
+    </aside>
+    {menu && <div className="overlay" onClick={() => setMenu(false)} />}
+    <main className="main">
+      <header className="topbar"><div className="topLeft"><button className="iconButton mobileMenu" aria-label="Open menu" onClick={() => setMenu(true)}><Menu size={21}/></button><span className="breadcrumb">Workspace</span><span className="slash">/</span><strong>{showFaqs ? 'FAQ Library' : 'AI Assistant'}</strong></div><div className="topRight"><span className="status"><span/> System online</span><span className="topAvatar">Q</span></div></header>
+      {showFaqs ? <section className="library"><div className="eyebrow"><Sparkles size={15}/> KNOWLEDGE BASE</div><h1>Answers, organized.</h1><p>Browse the questions powering QueryMind's retrieval engine. Choose a question to start a conversation.</p><input className="search" value={search} placeholder="Search the FAQ library..." onChange={e => setSearch(e.target.value)} /><div className="faqGrid">{filtered.map(f => <button className="faqCard" key={f.id} onClick={() => { setShowFaqs(false); void send(f.question) }}><span>{f.category}</span><strong>{f.question}</strong><ArrowRight size={17}/></button>)}</div>{filtered.length === 0 && <p>No matching questions found.</p>}</section> :
+      <div className="workspace">
+        <section className="intro"><div className="eyebrow"><span className="eyebrowDot"/> YOUR AI SUPPORT COMPANION</div><h1>How can we <em>help you?</em></h1><p>Intelligent answers, without the wait. Ask anything about our demo services.</p><div className="statRow"><span><ShieldCheck size={16}/> Privacy-first</span><span><Sparkles size={16}/> NLP-powered</span><span><Command size={16}/> Instant answers</span></div></section>
+        <section className="chatPanel"><div className="chatHeader"><div className="assistantAvatar"><Bot size={24}/></div><div><strong>QueryMind Assistant <span className="verified"><Check size={11}/></span></strong><small><span className="onlineDot"/> Ready to help you</small></div><div className="chatActions"><button className="iconButton" title="New conversation" aria-label="Clear chat" onClick={clearChat}><Plus size={19}/></button><button className="iconButton" title="Export conversation" aria-label="Copy conversation" onClick={() => { navigator.clipboard.writeText(messages.map(m => `${m.role}: ${m.text}`).join('\n\n')).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1600) }).catch(() => setError('Could not copy conversation.')) }}>{copied ? <Check size={18}/> : <Trash2 size={18}/>}</button></div></div>
+          <div className="chatMessages" aria-live="polite">{messages.map(m => <div className={`message ${m.role}`} key={m.id}>{m.role === 'assistant' && <div className="messageAvatar"><Sparkles size={15}/></div>}<div className="messageBody"><div className="bubble">{m.text}</div>{m.match?.matched && <div className="matchMeta"><Check size={12}/> Matched FAQ · {Math.round(m.match.confidence * 100)}% similarity</div>}{m.match?.suggestions.length ? <div className="suggestions">{m.match.suggestions.map(s => <button key={s} onClick={() => void send(s)}>{s} <ArrowRight size={12}/></button>)}</div> : null}</div></div>)}{loading && <div className="message assistant"><div className="messageAvatar"><Sparkles size={15}/></div><div className="bubble typing"><span/><span/><span/></div></div>}<div ref={endRef}/></div>
+          {messages.length === 1 && <div className="quickPrompts"><div className="promptLabel">SUGGESTED QUESTIONS <ChevronDown size={14}/></div><div className="promptGrid">{starters.map((s,i) => <button key={s} onClick={() => void send(s)}><span className="promptNum">0{i+1}</span>{s}<ArrowRight size={15}/></button>)}</div></div>}
+          <form className="composer" onSubmit={e => { e.preventDefault(); void send() }}><div className="inputWrap"><input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask QueryMind anything..." aria-label="Your question" maxLength={1500} /><button type="submit" aria-label="Send message" disabled={!input.trim() || loading}><Send size={18}/></button></div><div className="composerHint"><span>Powered by NLP + cosine similarity</span><span>Enter ↵ to send</span></div>{error && <small className="error" role="alert">{error}</small>}</form>
+        </section>
+        <div className="metrics"><div><span>KNOWLEDGE BASE</span><strong>{faqs.length || '—'} <small>FAQs</small></strong></div><div><span>QUESTIONS ASKED</span><strong>{attempts}</strong></div><div><span>SUCCESSFUL MATCHES</span><strong>{answered}</strong></div><div className="lastMetric"><span>AI ENGINE</span><strong>TF-IDF <small>+ NLP</small></strong></div></div>
+      </div>}
+    </main>
+  </div>
+}
