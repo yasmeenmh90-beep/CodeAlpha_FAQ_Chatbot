@@ -68,7 +68,7 @@ export default function App() {
   const [category, setCategory] = useState('all')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [failed, setFailed] = useState<{text:string;topic:string}|null>(null)
+  const [failed, setFailed] = useState<{text:string;topic:string;language:string;previous_question?:string|null}|null>(null)
   const [menu, setMenu] = useState(false)
   const [showFaqs, setShowFaqs] = useState(false)
   const [search, setSearch] = useState('')
@@ -78,8 +78,8 @@ export default function App() {
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [promptsOpen, setPromptsOpen] = useState(()=>localStorage.getItem('qm-prompts')!=='false')
   useEffect(() => {
-    fetch(`${API}/api/faqs`).then(r => { if (!r.ok) throw new Error('Unable to load FAQs'); return r.json() })
-      .then(d => { setFaqs(d.faqs); setApiStatus('ready'); setError('') }).catch(() => { setApiStatus('offline'); setError('Backend is offline. Start the API to enable real answers.') })
+    fetch(`${API}/api/faqs`, {signal:AbortSignal.timeout(5000)}).then(r => { if (!r.ok) throw new Error('Unable to load FAQs'); return r.json() })
+      .then(d => { setFaqs(d.faqs); setApiStatus('ready') }).catch(() => { setApiStatus('offline'); setError('Backend is offline. Start the API to enable real answers.') })
   }, [refresh])
   useEffect(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight }, [messages, loading, showFaqs, analytics])
   useEffect(() => {
@@ -108,19 +108,20 @@ export default function App() {
     const text = message.trim()
     if (!text || loading || text.length > 1500) return
     if (!retry) setMessages(prev => [...prev, { id: Date.now(), role: 'user', text }])
+    const payload = retry && failed ? {message:failed.text,category:failed.topic,language:failed.language,previous_question:failed.previous_question} : {message:text,category:topic,language,previous_question:contextEnabled ? [...messages].reverse().find(m=>m.match?.matched)?.match?.matched_question : undefined}
     setFailed(null)
     setInput('')
     const started = performance.now()
     setLoading(true)
     setError('')
     try {
-      const response = await fetch(`${API}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, category: topic, language, previous_question: contextEnabled ? [...messages].reverse().find(m=>m.match?.matched)?.match?.matched_question : undefined }) })
+      const response = await fetch(`${API}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(60000), body: JSON.stringify(payload) })
       if (!response.ok) { const detail = await response.json().catch(()=>({})); throw new Error(typeof detail.detail==='string'?detail.detail:'The service could not process your request.') }
       const result: Reply = await response.json()
       setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', text: result.answer, match: result, latency: Math.round(performance.now()-started) }])
     } catch (e) {
       const detail = e instanceof Error ? e.message : 'Connection to the API failed.'
-      setFailed({text,topic})
+      setFailed({text,topic,language:payload.language,previous_question:payload.previous_question})
       if (e instanceof TypeError) setApiStatus('offline')
       setError(detail)
     } finally { setLoading(false) }
