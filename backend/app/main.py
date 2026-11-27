@@ -103,7 +103,7 @@ def require_admin(authorization: str = ""):
     if not token:
         raise HTTPException(503, "Administration is disabled")
     if not secrets.compare_digest(authorization.encode(), ("Bearer " + token).encode()):
-        raise HTTPException(401, "Invalid administration token")
+        raise HTTPException(401, "Invalid administration token", headers={"WWW-Authenticate": "Bearer"})
 
 
 @app.get("/api/admin/faqs")
@@ -117,6 +117,8 @@ def admin_faqs(authorization: str = Header(default="")):
 def replace_faqs(request: KnowledgeUpdate, authorization: str = Header(default="")):
     require_admin(authorization)
     rows = [item.model_dump() for item in request.faqs]
+    if any(not row["question"].strip() or not row["answer"].strip() or not row["category"].strip() or not str(row["id"]).strip() for row in rows):
+        raise HTTPException(422, "FAQ fields must not be blank")
     if len({str(row["id"]) for row in rows}) != len(rows):
         raise HTTPException(422, "Duplicate FAQ IDs")
     if len({row["question"].strip().casefold() for row in rows}) != len(rows):
@@ -131,6 +133,8 @@ def replace_faqs(request: KnowledgeUpdate, authorization: str = Header(default="
             with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=DATA_FILE.parent, delete=False) as stream:
                 temp = Path(stream.name)
                 json.dump(rows, stream, ensure_ascii=False, indent=2)
+                stream.flush()
+                os.fsync(stream.fileno())
             os.replace(temp, DATA_FILE)
             get_engine.cache_clear()
         finally:
