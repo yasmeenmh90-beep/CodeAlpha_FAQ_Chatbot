@@ -78,7 +78,7 @@ class FAQEngine:
     def correct(self, question: str) -> str:
         def replace_word(match):
             word = match.group().lower()
-            if len(word) < 5 or word in self.words or word.isdigit():
+            if len(word) < 4 or word in self.words or word.isdigit():
                 return match.group()
             candidates = get_close_matches(word, sorted(self.words), n=2, cutoff=.85)
             return candidates[0] if len(candidates) == 1 else match.group()
@@ -88,11 +88,13 @@ class FAQEngine:
         matches = self.search(question, category)
         best = matches[0] if matches else None
         confident = best is not None and best.score >= (max(self.threshold, 0.45) if self.semantic is not None else self.threshold)
-        corrected = self.correct(question) if not confident and self.semantic is None else question
+        corrected = self.correct(question) if self.semantic is None else question
         if corrected != question:
             revised = self.search(corrected, category)
-            if revised and revised[0].score >= max(self.threshold, .35):
+            if revised and revised[0].score >= max(self.threshold, .35) and (not confident or (revised[0].faq["question"] == best.faq["question"] and revised[0].score > best.score + .03)):
                 matches, best, confident = revised, revised[0], True
+            else:
+                corrected = question
         return {
             "corrected_question": corrected if confident and corrected != question else None,
             "engine": "hybrid" if self.semantic is not None else "tfidf",
