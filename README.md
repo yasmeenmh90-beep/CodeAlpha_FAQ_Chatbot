@@ -291,14 +291,14 @@ CodeAlpha_FAQ_Chatbot/
 | Analytics dashboard and response intelligence | Implemented |
 | Optional hybrid multilingual retrieval | Implemented in code; evaluation pending |
 | Knowledge Studio and protected API | Implemented; regression testing pending |
-| Dedicated voice mode with live waveform | Planned |
-| PDF ingestion and document RAG | Planned |
-| AI Playground | Planned |
-| System Monitor | Planned |
-| Support Tickets | Planned |
-| Settings Studio | Planned |
-| Multilingual answer translation | Planned |
-| Full regression, CI/CD and live deployment | Pending |
+| Dedicated voice mode with live waveform | Implemented in code; verification pending |
+| PDF ingestion and document RAG | Implemented in code; verification pending |
+| AI Playground | Implemented in code; verification pending |
+| System Monitor | Implemented in code; verification pending |
+| Support Tickets | Implemented in code; verification pending |
+| Settings Studio | Implemented in code; verification pending |
+| Multilingual answer translation | Implemented in code; verification pending |
+| Regression tests, CI and deployment configuration | Added; verification and live hosting pending |
 
 ---
 
@@ -350,3 +350,29 @@ Configure explicit comma-separated frontend origins using `QUERYMIND_CORS_ORIGIN
 API POST/PUT bodies are bounded to 2 MiB (5 MiB for PDF extraction). Fixed-window per-process IP limits are 10 write requests/minute for expensive endpoint groups and 60/minute for other API write groups. Shared proxy IPs, multiple workers and server restarts affect these limits. Production needs trusted proxy configuration, HTTPS, durable storage, upstream limits, dependency review and authentication appropriate to the deployment.
 
 Monitoring holds the last 500 completed API requests in memory, without request bodies or tokens. Ticket submission does not contact external support staff. Evaluation smoke-test examples reuse FAQ questions; they are not independent accuracy evidence. Browser data deletion does not erase server tickets.
+
+
+## Deployment guide (Phase 14)
+
+1. Verify backend tests and frontend production build locally; review the Quality checks workflow on GitHub.
+2. In Render, connect this repository using a Blueprint and the root render.yaml. Supply the exact HTTPS frontend origin as QUERYMIND_CORS_ORIGINS (update after obtaining the Vercel URL). The blueprint generates an admin secret and disables automatic deployment. Deploy manually after checks pass. Keep the secret server-side.
+3. Open the deployed backend /api/health endpoint and verify successful JSON output.
+4. In Vercel, import the same repository, set Root Directory to frontend, select Vite and set VITE_API_URL to the actual HTTPS Render service URL without a trailing slash. Deploy.
+5. Set QUERYMIND_CORS_ORIGINS on Render to the actual Vercel origin, then restart/redeploy the backend. Rebuild the frontend whenever VITE_API_URL changes.
+6. Smoke-test chat, document upload, evaluation, tickets, admin access and browser settings over HTTPS.
+
+The initial Render configuration uses a free service for demonstration. Cold starts and ephemeral filesystem storage are expected limitations. Do not use the free filesystem for valuable FAQ edits or customer tickets. For durable storage, choose a hosting plan with a persistent volume, mount it and configure QUERYMIND_FAQ_FILE and QUERYMIND_TICKET_DB to files on that volume. Keep one API worker with the current process-local administration and telemetry design.
+
+Optional semantic retrieval is disabled by default to reduce memory usage. No hosting credentials are committed. Never place QUERYMIND_ADMIN_TOKEN in a VITE_ variable. No live URL is claimed until hosting and smoke tests succeed.
+
+## Release checklist
+
+- [ ] Backend regression suite passes
+- [ ] Frontend production build passes
+- [ ] Dependency vulnerabilities reviewed
+- [ ] All studios tested in browser on desktop and mobile
+- [ ] GitHub Actions passes
+- [ ] Backend health and HTTPS frontend verified
+- [ ] Admin access and unauthorized access tested
+- [ ] Data persistence limitations documented
+- [ ] Demo recording and actual live link added for submission
