@@ -151,6 +151,10 @@ from .playground import Experiment, Evaluation, rank, evaluate
 def playground_modes():
     return {"modes": ["tfidf", "hybrid"] if get_engine().semantic is not None else ["tfidf"]}
 
+@app.get("/api/playground/benchmark")
+def playground_benchmark():
+    return json.loads((DEFAULT_DATA_FILE.parent / "evaluation_cases.json").read_text(encoding="utf-8"))
+
 @app.post("/api/playground/rank")
 def playground_rank(body: Experiment):
     return rank(get_engine(), body.question, body.threshold, body.mode)
