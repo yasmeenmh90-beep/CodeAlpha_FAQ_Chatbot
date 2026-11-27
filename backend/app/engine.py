@@ -22,7 +22,18 @@ _STOP = frozenset({
 
 
 def preprocess(text: str) -> str:
-    words = _WORD.findall(text.lower())
+    # Normalize domain vocabulary consistently for corpus and queries.
+    text = text.lower()
+    for pattern, replacement in (
+        (r"\b(?:log|sign)\s*[- ]?\s*in\b", "signin"),
+        (r"\b(?:unable to|cannot|can not|can't)\b", "failed"),
+        (r"\b(?:parcel|package|shipment)\b", "order"),
+        (r"\b(?:profile|user account)\b", "account"),
+        (r"\b(?:make|register|set up|open)\s+(?:a |an )?(?:new )?account\b", "create account"),
+        (r"\bwhere\s+is\s+(?:my |the )?order\b", "track order"),
+    ):
+        text = re.sub(pattern, replacement, text)
+    words = _WORD.findall(text)
     return " ".join(_stemmer.stem(word) for word in words if word not in _STOP)
 
 
