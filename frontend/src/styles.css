@@ -100,3 +100,57 @@ html,body,#root{height:100%;margin:0;overflow:hidden}
 .operations .vsGrid{align-items:start}.opsWide{grid-column:1/-1}.opsInput{background:var(--vs-field);color:var(--vs-text);border:1px solid var(--vs-border);border-radius:9px;padding:12px;max-width:100%}.opsTable{overflow:auto;max-height:550px}.opsTable table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}.opsTable th,.opsTable td{padding:12px;border-bottom:1px solid var(--vs-border);white-space:nowrap}.opsTable th{color:var(--vs-gold);position:sticky;top:0;background:var(--vs-panel)}.operations .docResult textarea{margin:12px 0;min-height:80px}.operations .pgMetrics strong{overflow-wrap:anywhere;font-size:19px}
 
 .settingsStudio .vsGrid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.settingsStudio article{min-height:180px}.settingsStudio article p{font-size:13px;line-height:1.6}.settingsStudio .settingsData{margin-top:20px}.settingsStudio .settingsData button:last-child{color:var(--vs-text);border-color:#bf6262}.settingsStudio small{line-height:1.6}.settingsStudio .vsCheck input{width:16px;height:16px;flex-shrink:0}@media(max-width:800px){.settingsStudio .vsGrid{grid-template-columns:1fr}.settingsStudio article{min-height:0}}
+
+
+/* Analytics 2.0 — scoped premium reporting workspace */
+.analyticsPage{--a-panel:#141e29;--a-border:#293747;--a-muted:#a3afbd;--a-gold:#e1c48d;--a-track:#ffffff0b;--a-hero:#1d2a38;max-width:1500px;margin:0 auto;padding:clamp(16px,2.1vw,32px);color:inherit}
+.light .analyticsPage{--a-panel:#fffdf9;--a-border:#ddd6c8;--a-muted:#655f55;--a-gold:#805c28;--a-track:#4030180c;--a-hero:#f5ead6}
+.analyticsPage .analyticsHeading{padding:24px 26px;border:1px solid var(--a-border);border-radius:18px;background:radial-gradient(ellipse at 100% 0%,#c9a66b1c,transparent 65%),linear-gradient(120deg,var(--a-hero),var(--a-panel));box-shadow:0 12px 30px #0000000c}
+.analyticsPage .analyticsHeading h1{font-size:clamp(26px,3vw,36px);font-weight:700;letter-spacing:-1.5px;margin:9px 0}
+.analyticsPage .analyticsHeading p{font-size:13px;line-height:1.5;margin:0;color:var(--a-muted)}
+.analyticsPage .eyebrow{justify-content:flex-start;color:var(--a-gold);font-size:10px}
+.analyticsPage .analyticsHeading button{flex-shrink:0;border-radius:10px;min-height:40px}
+.analyticsPage .analyticsToolbar{margin:16px 0 24px;gap:12px}
+.analyticsPage .analyticsLocal{color:var(--a-muted);opacity:1}
+.analyticsPage .periodTabs{background:var(--a-panel);border-color:var(--a-border);border-radius:10px}
+.analyticsPage .periodTabs button{border-radius:7px;min-height:34px}
+.analyticsPage .analyticsSectionLabel{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0 10px;color:var(--a-gold);font-size:10px;letter-spacing:1.3px;font-weight:700}
+.analyticsPage .analyticsSectionLabel small{color:var(--a-muted);letter-spacing:0;font-size:11px;font-weight:400;text-align:right}
+.analyticsPage .analyticsGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 24px}
+.analyticsPage .insightCard{position:relative;overflow:hidden;background:var(--a-panel);border:1px solid var(--a-border);border-radius:15px;padding:16px 18px;min-width:0;box-shadow:0 6px 18px #0000000a;transition:transform .18s,border-color .18s}
+.analyticsPage .insightCard:before{content:"";position:absolute;top:0;left:18px;width:38px;height:2px;background:var(--a-gold);border-radius:0 0 3px 3px}
+.analyticsPage .insightCard:hover{transform:translateY(-2px);border-color:var(--a-gold)}
+.analyticsPage .kpiTop{gap:6px}
+.analyticsPage .kpiTop span{color:var(--a-muted);opacity:1;font-size:12px;font-weight:600}
+.analyticsPage .kpiTop svg{box-sizing:content-box;flex-shrink:0;padding:8px;border-radius:10px;background:#c9a66b16;color:var(--a-gold)}
+.analyticsPage .insightCard strong{font-family:Manrope,sans-serif;letter-spacing:-1px;font-variant-numeric:tabular-nums;font-size:clamp(24px,3vw,34px);line-height:1.15;color:var(--a-gold);margin-top:8px}
+.analyticsPage .insightCard small{color:var(--a-muted);opacity:1;line-height:1.4;margin-top:6px}
+.analyticsPage .analyticsCharts{gap:14px;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}
+.analyticsPage .graphPanel{background:var(--a-panel);border:1px solid var(--a-border);border-radius:16px;padding:20px;box-shadow:0 6px 22px #0000000a}
+.analyticsPage .graphPanel h2{font-family:Manrope,sans-serif;font-weight:700;font-size:16px;letter-spacing:-.35px}
+.analyticsPage .graphPanel p{opacity:1;color:var(--a-muted);line-height:1.5}
+.analyticsPage .graphLegend{margin:10px 0 4px;flex-wrap:wrap}
+.analyticsPage .trendPanel svg{min-height:0;display:block;margin:8px 0}
+.analyticsPage .chartReadout{background:var(--a-track);border-radius:8px;padding:9px 12px;color:var(--a-muted);opacity:1}
+.analyticsPage .donutWrap{max-width:160px;margin:4px auto 10px}
+.analyticsPage .outcomeRow{padding:11px 0;border-color:var(--a-border)}
+.analyticsPage .outcomeRow b,.analyticsPage .chartRow b{font-variant-numeric:tabular-nums}
+.analyticsPage .chartRow{grid-template-columns:minmax(65px,100px) minmax(0,1fr) 25px;gap:10px;margin:17px 0;font-size:13px}
+.analyticsPage .chartRow>div{background:var(--a-track);height:9px;border-radius:20px}
+.analyticsPage .chartRow i{background:linear-gradient(90deg,#a47d43,#e1c48d);border-radius:20px}
+.analyticsPage .feedbackSummary{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:10px 0}
+.analyticsPage .feedbackSummary strong{font-family:Manrope,sans-serif;font-size:30px;color:var(--a-gold)}
+.analyticsPage .feedbackSummary span{font-size:11px;color:var(--a-muted)}
+.analyticsPage .feedbackBar{height:9px;margin:12px 0 18px}
+.analyticsPage .feedbackBar[data-empty=true]{background:var(--a-track)}
+.analyticsPage .reviewPanel{margin-top:0}
+.analyticsPage .reviewRow{padding:13px 12px;border:0;border-bottom:1px solid var(--a-border);gap:14px}
+.analyticsPage .reviewRow:last-child{border-bottom:0}
+.analyticsPage .reviewRow span{overflow-wrap:anywhere;line-height:1.5}
+.analyticsPage .reviewRow small{color:var(--a-muted);opacity:1}
+.analyticsPage .reviewRow:hover{background:var(--a-track)}
+.analyticsPage .analyticsEmpty{color:var(--a-muted);opacity:1;background:var(--a-track);border-radius:10px;padding:24px 12px}
+@media(max-width:1100px){.analyticsPage .analyticsCharts{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){.analyticsPage .analyticsHeading{padding:18px;align-items:flex-start;flex-wrap:wrap}.analyticsPage .analyticsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.analyticsPage .insightCard{padding:13px}.analyticsPage .graphPanel{padding:15px}.analyticsPage .analyticsSectionLabel{letter-spacing:.5px}}
+@media(max-width:390px){.analyticsPage .analyticsGrid{grid-template-columns:1fr}.analyticsPage .reviewRow{align-items:flex-start;flex-direction:column}}
+@media(prefers-reduced-motion:reduce){.analyticsPage *{animation:none!important;transition:none!important}}
