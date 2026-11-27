@@ -116,3 +116,6 @@ def replace_faqs(request: KnowledgeUpdate, authorization: str = Header(default="
             if temp is not None:
                 temp.unlink(missing_ok=True)
     return {"status": "updated", "faq_count": len(rows)}
+
+from .documents import router as document_router
+app.include_router(document_router)
