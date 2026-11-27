@@ -19,6 +19,7 @@ class Evaluation(BaseModel):
     cases: list[Example] = Field(min_length=1, max_length=100)
     threshold: float = Field(default=.2, ge=0, le=1)
     mode: Literal["tfidf", "hybrid"] = "tfidf"
+    production: bool = False
 
 def rank(engine, question, threshold, mode):
     if mode == "hybrid" and engine.semantic is None:
@@ -38,10 +39,23 @@ def evaluate(engine, body):
     known = {row["question"] for row in engine.faqs}
     if any(c.expected is not None and c.expected not in known for c in body.cases):
         raise HTTPException(422, "Expected labels must be exact FAQ questions or null")
+    if body.production:
+        active_mode = "hybrid" if engine.semantic is not None else "tfidf"
+        if body.mode != active_mode:
+            raise HTTPException(422, "Production evaluation requires the active engine mode")
     rows = []
     tp = fp = fn = correct = hits = reciprocal = positives = 0
     for case in body.cases:
         result = rank(engine, case.question, body.threshold, body.mode)
+        if body.production:
+            start = perf_counter()
+            reply = engine.respond(case.question)
+            elapsed = (perf_counter()-start)*1000
+            result["predicted"] = reply["matched_question"]
+            result["latency_ms"] = elapsed
+            result["corrected_question"] = reply.get("corrected_question")
+            if reply.get("corrected_question"):
+                result["candidates"] = rank(engine, reply["corrected_question"], body.threshold, body.mode)["candidates"]
         predicted = result["predicted"]
         correct += int(predicted == case.expected)
         tp += int(predicted is not None and predicted == case.expected)
@@ -57,7 +71,9 @@ def evaluate(engine, body):
         rows.append({"question": case.question, "expected": case.expected, **result})
     precision = tp/(tp+fp) if tp+fp else 0
     recall = tp/(tp+fn) if tp+fn else 0
-    return {"accuracy": correct/len(rows), "precision": precision, "recall": recall,
+    return {"evaluation_mode": "production" if body.production else "raw_ranking",
+            "effective_threshold": (max(engine.threshold, .45) if engine.semantic is not None else engine.threshold) if body.production else body.threshold,
+            "accuracy": correct/len(rows), "precision": precision, "recall": recall,
             "f1": 2*precision*recall/(precision+recall) if precision+recall else 0,
             "recall_at_5": hits/positives if positives else None,
             "mrr_at_5": reciprocal/positives if positives else None,
