@@ -1,20 +1,57 @@
 """Conservative follow-up resolution and explicitly requested external translation."""
 import re
+import time
+from functools import lru_cache
+from threading import Lock
 
 LANGUAGES = {"en", "fr", "ur", "ar", "es", "de"}
 FOLLOWUP = re.compile(r"\b(it|that|this|they|them|those|there|one)\b|^(and|what about|how about)\b", re.I)
 
+LOCALES = {"en": "en-GB", "fr": "fr-FR", "ar": "ar-SA", "ur": "ur-PK", "es": "es-ES", "de": "de-DE"}
+_provider_lock = Lock()
+_google_retry_at = 0.0
+
+@lru_cache(maxsize=256)
 def translate(text: str, source: str, target: str) -> str:
-    if source == target:
+    global _google_retry_at
+    if source == target or not text.strip():
         return text
-    from deep_translator import GoogleTranslator
-    translator = GoogleTranslator(source=source, target=target)
-    # Provider limits individual strings to 5000 characters.
-    parts = [text[i:i+4000] for i in range(0, len(text), 4000)]
-    return " ".join(translator.translate(part) for part in parts)
+    from deep_translator import GoogleTranslator, MyMemoryTranslator
+    with _provider_lock:
+        google_available = time.monotonic() >= _google_retry_at
+    if google_available:
+        try:
+            translator = GoogleTranslator(source=source, target=target)
+            parts = [text[i:i+4000] for i in range(0, len(text), 4000)]
+            answers = [translator.translate(part) for part in parts]
+            if not all(isinstance(a, str) and a.strip() for a in answers):
+                raise ValueError("Empty translation")
+            return " ".join(answers)
+        except Exception:
+            with _provider_lock:
+                _google_retry_at = time.monotonic() + 300
+    # MyMemory requires explicit source and target locales.
+    translator = MyMemoryTranslator(source=LOCALES[source], target=LOCALES[target])
+    # Keep each request below MyMemory's 500-byte limit, including Unicode.
+    parts, part = [], ""
+    for word in text.split():
+        for i in range(0, len(word), 100):
+            piece = word[i:i+100]
+            candidate = (part + " " + piece).strip()
+            if len(candidate.encode("utf-8")) > 450:
+                parts.append(part)
+                part = piece
+            else:
+                part = candidate
+    if part:
+        parts.append(part)
+    answers = [translator.translate(p) for p in parts]
+    if not all(isinstance(a, str) and a.strip() and "MYMEMORY WARNING" not in a.upper() for a in answers):
+        raise ValueError("Translation fallback unavailable")
+    return " ".join(answers)
 
 def respond(engine, message, category, previous, language):
-    query = translate(message, "auto", "en") if language != "en" else message
+    query = translate(message, language, "en") if language != "en" else message
     result = engine.respond(query, category)
     used = False
     # Never let context override an independently matched question.
