@@ -2,6 +2,9 @@
 import re
 import time
 from threading import Lock, BoundedSemaphore
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+
+_translation_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='translation')
 
 LANGUAGES = {"en", "fr", "ur", "ar", "es", "de"}
 FOLLOWUP = re.compile(r"\b(it|that|this|they|them|those|there|one)\b|^(and|what about|how about)\b", re.I)
@@ -17,9 +20,15 @@ def translate(text: str, source: str, target: str) -> str:
     if not _translation_slots.acquire(blocking=False):
         raise ValueError("Translation service busy")
     try:
-        return _translate(text, source, target)
-    finally:
+        future = _translation_pool.submit(_translate, text, source, target)
+    except BaseException:
         _translation_slots.release()
+        raise
+    future.add_done_callback(lambda _: _translation_slots.release())
+    try:
+        return future.result(timeout=25)
+    except TimeoutError as exc:
+        raise ValueError("Translation provider deadline exceeded") from exc
 
 def _translate(text: str, source: str, target: str) -> str:
     global _google_retry_at
