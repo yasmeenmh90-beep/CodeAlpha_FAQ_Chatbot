@@ -1,8 +1,7 @@
 """Conservative follow-up resolution and explicitly requested external translation."""
 import re
 import time
-from functools import lru_cache
-from threading import Lock
+from threading import Lock, BoundedSemaphore
 
 LANGUAGES = {"en", "fr", "ur", "ar", "es", "de"}
 FOLLOWUP = re.compile(r"\b(it|that|this|they|them|those|there|one)\b|^(and|what about|how about)\b", re.I)
@@ -10,9 +9,19 @@ FOLLOWUP = re.compile(r"\b(it|that|this|they|them|those|there|one)\b|^(and|what 
 LOCALES = {"en": "en-GB", "fr": "fr-FR", "ar": "ar-SA", "ur": "ur-PK", "es": "es-ES", "de": "de-DE"}
 _provider_lock = Lock()
 _google_retry_at = 0.0
+_translation_slots = BoundedSemaphore(4)
 
-@lru_cache(maxsize=256)
 def translate(text: str, source: str, target: str) -> str:
+    if source == target or not text.strip():
+        return text
+    if not _translation_slots.acquire(blocking=False):
+        raise ValueError("Translation service busy")
+    try:
+        return _translate(text, source, target)
+    finally:
+        _translation_slots.release()
+
+def _translate(text: str, source: str, target: str) -> str:
     global _google_retry_at
     if source == target or not text.strip():
         return text
