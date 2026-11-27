@@ -255,7 +255,7 @@ Recommended evaluation: top-1 accuracy on labeled FAQ queries, recall@3, abstent
 - Admin access is disabled unless a token is configured; tokens are compared server-side.
 - Use HTTPS for remote deployments, keep secrets on the server and restrict CORS.
 - Publishing FAQ changes modifies a server-side JSON file. Use backups and persistent storage.
-- Production authentication, rate limiting, audit logging and concurrent editing controls remain future work.
+- Basic process-local rate limiting is implemented. Production authentication, distributed rate limiting, audit logging and concurrent editing controls remain future work.
 
 ## Deployment
 
@@ -319,7 +319,7 @@ Task 2 — Chatbot for FAQs
 |---|---|
 | Voice Studio | Browser recognition, microphone visualization, editable transcript, speech playback |
 | Document Studio | PDF extraction, local preview, TF-IDF passage retrieval and page citations |
-| Multilingual chat | Six languages, optional external Google translation, bounded rule-based follow-up context |
+| Multilingual chat | Six languages, optional external Google/MyMemory translation, bounded rule-based follow-up context |
 | AI Playground | TF-IDF and optional hybrid ranking, configurable experimental thresholds, labeled evaluation, JSON export |
 | System Monitor | Protected process-local request telemetry, latency, P95 and HTTP errors |
 | Support Tickets | SQLite persistence, explicit submission, protected queue and resolution notes |
@@ -352,7 +352,7 @@ API POST/PUT bodies are bounded to 2 MiB (5 MiB for PDF extraction). Fixed-windo
 Monitoring holds the last 500 completed API requests in memory, without request bodies or tokens. Ticket submission does not contact external support staff. Evaluation smoke-test examples reuse FAQ questions; they are not independent accuracy evidence. Browser data deletion does not erase server tickets.
 
 
-## Deployment guide (Phase 14)
+## Optional deployment guide (not required for local submission)
 
 1. Verify backend tests and frontend production build locally; review the Quality checks workflow on GitHub.
 2. In Render, connect this repository using a Blueprint and the root render.yaml. Supply the exact HTTPS frontend origin as QUERYMIND_CORS_ORIGINS (update after obtaining the Vercel URL). The blueprint generates an admin secret and disables automatic deployment. Deploy manually after checks pass. Keep the secret server-side.
@@ -372,7 +372,62 @@ Optional semantic retrieval is disabled by default to reduce memory usage. No ho
 - [ ] Dependency vulnerabilities reviewed
 - [ ] All studios tested in browser on desktop and mobile
 - [ ] GitHub Actions passes
-- [ ] Backend health and HTTPS frontend verified
+- [ ] Local backend health and frontend verified
 - [ ] Admin access and unauthorized access tested
 - [ ] Data persistence limitations documented
-- [ ] Demo recording and actual live link added for submission
+- [ ] Local demo recording and repository link added for submission
+
+
+## Final local submission and reproducible evaluation
+
+This project is submitted as a local educational demonstration. No live deployment is required. The optional deployment instructions above are retained for future use.
+
+### Consolidated verification
+
+From the backend directory, with the virtual environment activated:
+
+```bash
+export QUERYMIND_SEMANTIC=0
+python -m compileall -q app
+python -m pytest -q
+python -m pip check
+python - <<'PY'
+import json
+from pathlib import Path
+from app.main import get_engine
+from app.playground import Evaluation, evaluate
+cases = json.loads(Path("data/evaluation_cases.json").read_text())
+for production in (False, True):
+    result = evaluate(get_engine(), Evaluation(cases=cases, production=production))
+    print(json.dumps({k:v for k,v in result.items() if k != "rows"}, indent=2))
+PY
+```
+
+From frontend:
+
+```bash
+npm install
+npm run build
+npm run test
+npm audit
+```
+
+The 28-case manually authored development benchmark includes 20 FAQ queries and eight unrelated questions. It is not an external test set. Raw ranking and production retrieval are separate evaluation modes; production uses the active engine's configured threshold and correction behavior. Benchmark results must be measured, not assumed. Hybrid mode requires separate testing with a compatible Python environment and installed model.
+
+### Security and reliability boundaries
+
+Protected reads and expensive API writes have process-local rate limits. Request-body reads have a 15-second deadline. PDF QA rejects duplicate page numbers and blank queries. FAQ publication rejects blank fields and flushes file data before replacement. Translation operations are limited to four concurrent calls without a persistent or in-memory text cache; external provider calls still lack a guaranteed network deadline. Frontend chat waits at most 60 seconds and retries preserve the original language and context. A browser timeout does not cancel server work. PDF limits do not fully prevent decompression/resource-exhaustion attacks. This is not production-grade security.
+
+### Local demonstration sequence
+
+1. Ask an FAQ, a typo-containing question and an unrelated question; inspect source and similarity.
+2. Browse FAQ Library and saved conversations; inspect Analytics.
+3. Demonstrate Voice Studio using browser microphone permissions.
+4. Upload a non-sensitive text PDF and ask a question with a page citation.
+5. Switch answer language after confirming external translation consent.
+6. Import the evaluation cases into AI Playground and inspect scores.
+7. Unlock Knowledge Studio and demonstrate draft editing without exposing the token.
+8. Submit a test support ticket and inspect the protected queue and monitor.
+9. Demonstrate theme and local data preferences in Settings Studio.
+
+Do not show credentials, personal documents, or real support messages in the recording. Use the repository link and a local screen recording for submission. Final test results and browser checks remain to be recorded after pulling the latest changes.
