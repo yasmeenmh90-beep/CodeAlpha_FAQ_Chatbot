@@ -1,4 +1,4 @@
-"""QueryMind FAQ service: no paid API keys, no external inference calls."""
+"""QueryMind FAQ service with optional external translation."""
 import json
 import os
 import secrets
@@ -6,6 +6,7 @@ import tempfile
 from threading import RLock
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +19,7 @@ DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "faqs.json"
 app = FastAPI(title="QueryMind AI API", version="1.0.0", description="CodeAlpha Task 2 — NLP FAQ chatbot")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[x.strip() for x in os.getenv("QUERYMIND_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if x.strip() and x.strip() != "*"],
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT"],
     allow_headers=["Content-Type", "Authorization"],
@@ -58,6 +59,8 @@ def categories():
 
 @app.post("/api/chat")
 def chat(request: ChatRequest):
+    if not request.message.strip():
+        raise HTTPException(422, "Question is required")
     categories = {row["category"] for row in get_engine().faqs}
     if request.category != "all" and request.category not in categories:
         raise HTTPException(status_code=422, detail="Unknown category")
@@ -80,7 +83,7 @@ class FAQRecord(BaseModel):
     question: str = Field(min_length=1, max_length=1500)
     answer: str = Field(min_length=1, max_length=10000)
     category: str = Field(min_length=1, max_length=40)
-    alternatives: list[str] = Field(default_factory=list, max_length=30)
+    alternatives: list[Annotated[str, Field(max_length=1500)]] = Field(default_factory=list, max_length=30)
 
 
 class KnowledgeUpdate(BaseModel):
@@ -167,3 +170,6 @@ def admin_tickets(authorization: str = Header(default="")):
 def admin_update_ticket(ticket_id: str, body: TicketUpdate, authorization: str = Header(default="")):
     require_admin(authorization)
     return update_ticket(ticket_id, body)
+
+from .security import RequestGuard
+app.add_middleware(RequestGuard)
