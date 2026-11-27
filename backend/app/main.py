@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from .engine import FAQEngine
+from .conversation import respond, LANGUAGES
 
 DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "faqs.json"
 app = FastAPI(title="QueryMind AI API", version="1.0.0", description="CodeAlpha Task 2 — NLP FAQ chatbot")
@@ -33,6 +34,8 @@ def get_engine() -> FAQEngine:
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1500)
     category: str = Field(default="all", max_length=40)
+    previous_question: str | None = Field(default=None, max_length=1500)
+    language: str = Field(default="en", max_length=2)
 
 
 @app.get("/api/health")
@@ -58,7 +61,14 @@ def chat(request: ChatRequest):
     categories = {row["category"] for row in get_engine().faqs}
     if request.category != "all" and request.category not in categories:
         raise HTTPException(status_code=422, detail="Unknown category")
-    return get_engine().respond(request.message, request.category)
+    if request.language not in LANGUAGES:
+        raise HTTPException(422, "Unsupported language")
+    try:
+        return respond(get_engine(), request.message, request.category, request.previous_question, request.language)
+    except Exception as exc:
+        if request.language == "en":
+            raise
+        raise HTTPException(502, "Translation service unavailable; try English") from exc
 
 
 # Administrative replacement of the complete knowledge base.
