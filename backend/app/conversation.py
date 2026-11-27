@@ -54,10 +54,17 @@ def respond(engine, message, category, previous, language):
     query = translate(message, language, "en") if language != "en" else message
     result = engine.respond(query, category)
     used = False
+    # For short explicit references, restrict ambiguous follow-ups to the known topic.
+    if previous and FOLLOWUP.search(query) and len(query.split()) <= 12:
+        known = next((row for row in engine.faqs if row["question"] == previous and category in ("all", None, row["category"])), None)
+        if known and not result["matched"]:
+            scoped = engine.respond(query, known["category"])
+            if scoped["matched"] and scoped["matched_question"] != previous:
+                result, used = scoped, True
     # Never let context override an independently matched question.
     if not result["matched"] and previous and FOLLOWUP.search(query) and len(query.split()) <= 12:
         known = next((row for row in engine.faqs if row["question"] == previous
-                      and category in ("all", row["category"])), None)
+                      and category in ("all", None, row["category"])), None)
         if known:
             # Replace only explicit references; do not answer by repeating the old question.
             subject = re.sub(r"^(how|what|where|when|why|can|do|does|is|are)\s+", "", previous.rstrip("?"), flags=re.I)
