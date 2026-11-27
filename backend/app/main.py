@@ -15,7 +15,15 @@ from pydantic import BaseModel, Field
 from .engine import FAQEngine
 from .conversation import respond, LANGUAGES
 
-DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "faqs.json"
+DEFAULT_DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "faqs.json"
+DATA_FILE = Path(os.getenv("QUERYMIND_FAQ_FILE", str(DEFAULT_DATA_FILE)))
+if DATA_FILE != DEFAULT_DATA_FILE and not DATA_FILE.exists():
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with DATA_FILE.open("x", encoding="utf-8") as stream:
+            stream.write(DEFAULT_DATA_FILE.read_text(encoding="utf-8"))
+    except FileExistsError:
+        pass
 app = FastAPI(title="QueryMind AI API", version="1.0.0", description="CodeAlpha Task 2 — NLP FAQ chatbot")
 app.add_middleware(
     CORSMiddleware,
