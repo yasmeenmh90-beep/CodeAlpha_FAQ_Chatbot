@@ -59,11 +59,15 @@ async def extract(request: Request):
 def retrieve(question, pages):
     chunks = []
     for page in pages:
-        words = re.findall(r"\S+", page.text)
-        for start in range(0, len(words), 100):
-            passage = " ".join(words[start:start+130])
-            if passage:
-                chunks.append((page.page, passage))
+        # Rank short source passages rather than entire pages.
+        for paragraph in re.split(r"\n\s*\n|\n(?=\s*\d+\.\s)", page.text):
+            sentences = re.split(r"(?<=[.!?])\s+|\n+", paragraph.strip())
+            for sentence in sentences:
+                words = sentence.split()
+                for start in range(0, len(words), 60):
+                    passage = " ".join(words[start:start+80])
+                    if passage:
+                        chunks.append((page.page, passage))
     if not chunks:
         return []
     try:
