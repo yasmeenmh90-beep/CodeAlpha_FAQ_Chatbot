@@ -416,7 +416,7 @@ The 28-case manually authored development benchmark includes 20 FAQ queries and 
 
 ### Security and reliability boundaries
 
-Protected reads and expensive API writes have process-local rate limits. Request-body reads have a 15-second deadline. PDF QA rejects duplicate page numbers and blank queries. FAQ publication rejects blank fields and flushes file data before replacement. Translation operations are limited to four concurrent calls without a persistent or in-memory text cache; external provider calls still lack a guaranteed network deadline. Frontend chat waits at most 60 seconds and retries preserve the original language and context. A browser timeout does not cancel server work. PDF limits do not fully prevent decompression/resource-exhaustion attacks. This is not production-grade security.
+Protected reads and expensive API writes have process-local rate limits. Request-body reads have a 15-second deadline. PDF QA rejects duplicate page numbers and blank queries. FAQ publication rejects blank fields and flushes file data before replacement. Translation operations are limited to four concurrent calls without a persistent or in-memory text cache; translation callers now have a 25-second response deadline per operation, but underlying provider network calls can continue until completion. Frontend chat waits at most 60 seconds and retries preserve the original language and context. A browser timeout does not cancel server work. PDF limits do not fully prevent decompression/resource-exhaustion attacks. This is not production-grade security.
 
 ### Local demonstration sequence
 
@@ -430,4 +430,11 @@ Protected reads and expensive API writes have process-local rate limits. Request
 8. Submit a test support ticket and inspect the protected queue and monitor.
 9. Demonstrate theme and local data preferences in Settings Studio.
 
-Do not show credentials, personal documents, or real support messages in the recording. Use the repository link and a local screen recording for submission. Final test results and browser checks remain to be recorded after pulling the latest changes.
+Do not show credentials, personal documents, or real support messages in the recording. Use the repository link and a local screen recording for submission. Final browser checks and fresh regression results remain to be recorded after pulling the latest changes.
+
+
+### Verified development baseline
+
+At commit `851d2ae` with the subsequently published local frontend dependency/test changes, the local verification reported 23 backend tests passing, 12 frontend tests passing, a successful production build, no broken Python requirements and zero npm audit vulnerabilities. One Starlette TestClient deprecation warning remained. On the 28-case development benchmark, raw ranking achieved 85.71% accuracy and production retrieval achieved 89.29%, with production precision 94.44%, recall 85%, F1 89.47% and mean retrieval latency 0.65 ms. These are historical development measurements, not independent validation or results for the latest synonym changes.
+
+The Playground now includes a bundled benchmark loader and raw/production evaluation selector. Production uses the active engine and threshold. CI installs frontend dependencies with npm ci and requires frontend tests and a high-severity vulnerability audit. Latest results must be checked before submission.
