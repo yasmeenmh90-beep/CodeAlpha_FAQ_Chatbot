@@ -1,0 +1,114 @@
+[
+  {
+    "question": "I need to make a new profile",
+    "expected": "How can I create an account?"
+  },
+  {
+    "question": "I forgot my pasword",
+    "expected": "How do I reset my password?"
+  },
+  {
+    "question": "My registered email needs updating",
+    "expected": "How can I change my email address?"
+  },
+  {
+    "question": "Please permanently remove my profile",
+    "expected": "How do I delete my account?"
+  },
+  {
+    "question": "I'm unable to log in",
+    "expected": "Why can't I sign in?"
+  },
+  {
+    "question": "Which cards can I pay with?",
+    "expected": "What payment methods are accepted?"
+  },
+  {
+    "question": "I want my purchase money back",
+    "expected": "How can I get a refund?"
+  },
+  {
+    "question": "I need a copy of the receipt",
+    "expected": "Where can I download my invoice?"
+  },
+  {
+    "question": "Replace my saved credit card",
+    "expected": "How do I update my payment details?"
+  },
+  {
+    "question": "My transaction was rejected",
+    "expected": "Why did my payment fail?"
+  },
+  {
+    "question": "Where is my parcel now?",
+    "expected": "How do I track my order?"
+  },
+  {
+    "question": "Stop my purchase before dispatch",
+    "expected": "Can I cancel my order?"
+  },
+  {
+    "question": "Send the parcel to a different address",
+    "expected": "Can I change my delivery address?"
+  },
+  {
+    "question": "When should the parcel arrive?",
+    "expected": "How long does delivery take?"
+  },
+  {
+    "question": "My item came broken",
+    "expected": "What should I do if an item arrives damaged?"
+  },
+  {
+    "question": "How can I reach your service team?",
+    "expected": "How do I contact customer support?"
+  },
+  {
+    "question": "When does the help desk open?",
+    "expected": "What are your support hours?"
+  },
+  {
+    "question": "I found a software defect",
+    "expected": "How can I report a bug?"
+  },
+  {
+    "question": "Let me talk to an actual person",
+    "expected": "Can I speak to a human agent?"
+  },
+  {
+    "question": "Are my chat messages retained?",
+    "expected": "Is my conversation saved?"
+  },
+  {
+    "question": "Predict tomorrow's weather",
+    "expected": null
+  },
+  {
+    "question": "Who won the World Cup?",
+    "expected": null
+  },
+  {
+    "question": "Explain quantum mechanics",
+    "expected": null
+  },
+  {
+    "question": "Write a poem about mountains",
+    "expected": null
+  },
+  {
+    "question": "What is the capital of Japan?",
+    "expected": null
+  },
+  {
+    "question": "How do I bake bread?",
+    "expected": null
+  },
+  {
+    "question": "Tell me a joke",
+    "expected": null
+  },
+  {
+    "question": "What is the price of gold?",
+    "expected": null
+  }
+]
