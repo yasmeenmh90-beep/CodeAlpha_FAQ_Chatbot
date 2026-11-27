@@ -438,3 +438,22 @@ Do not show credentials, personal documents, or real support messages in the rec
 At commit `851d2ae` with the subsequently published local frontend dependency/test changes, the local verification reported 23 backend tests passing, 12 frontend tests passing, a successful production build, no broken Python requirements and zero npm audit vulnerabilities. One Starlette TestClient deprecation warning remained. On the 28-case development benchmark, raw ranking achieved 85.71% accuracy and production retrieval achieved 89.29%, with production precision 94.44%, recall 85%, F1 89.47% and mean retrieval latency 0.65 ms. These are historical development measurements, not independent validation or results for the latest synonym changes.
 
 The Playground now includes a bundled benchmark loader and raw/production evaluation selector. Production uses the active engine and threshold. CI installs frontend dependencies with npm ci and requires frontend tests and a high-severity vulnerability audit. Latest results must be checked before submission.
+
+
+### Latest verified local results — commit 11ea046
+
+- Backend: 23/23 tests passed (1.85 s); one Starlette TestClient deprecation warning; pip check clean.
+- Frontend: 12/12 tests passed; production build succeeded (373 ms); npm audit reported zero vulnerabilities. npm emitted an optional fsevents install-script warning.
+- Working tree was clean and synchronized with origin/main.
+
+| Metric | Raw ranking | Production retrieval |
+|---|---:|---:|
+| Accuracy | 92.86% | 96.43% |
+| Precision | 94.74% | 95% |
+| Recall | 90% | 95% |
+| F1 | 92.31% | 95% |
+| Recall@5 | 95% | 100% |
+| MRR@5 | 92.5% | 97.5% |
+| Mean retrieval latency | 0.51 ms | 0.75 ms |
+
+Production returned 27 correct predictions out of 28 development cases. The remaining error confused delivery-address modification with order tracking. The benchmark was used during development and is not independent validation. Timings exclude HTTP and external translation. Optional hybrid mode, latest hosted CI outcome and full browser interaction checks remain unverified. Local demonstration only; no live deployment is claimed.
