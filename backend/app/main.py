@@ -129,3 +129,17 @@ def replace_faqs(request: KnowledgeUpdate, authorization: str = Header(default="
 
 from .documents import router as document_router
 app.include_router(document_router)
+
+from .playground import Experiment, Evaluation, rank, evaluate
+
+@app.get("/api/playground/modes")
+def playground_modes():
+    return {"modes": ["tfidf", "hybrid"] if get_engine().semantic is not None else ["tfidf"]}
+
+@app.post("/api/playground/rank")
+def playground_rank(body: Experiment):
+    return rank(get_engine(), body.question, body.threshold, body.mode)
+
+@app.post("/api/playground/evaluate")
+def playground_evaluate(body: Evaluation):
+    return evaluate(get_engine(), body)
