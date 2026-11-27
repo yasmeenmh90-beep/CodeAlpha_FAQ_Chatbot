@@ -21,6 +21,8 @@ class DocumentQuery(BaseModel):
     pages: list[Page] = Field(min_length=1, max_length=MAX_PAGES)
 
 def extract_pdf(data: bytes):
+    if len(data) > MAX_BYTES:
+        raise HTTPException(413, "Maximum upload size is 5 MB")
     if not data.startswith(b"%PDF-"):
         raise HTTPException(415, "Expected a PDF file")
     try:
@@ -84,5 +86,9 @@ def retrieve(question, pages):
 def query(body: DocumentQuery):
     if sum(len(p.text) for p in body.pages) > MAX_TEXT:
         raise HTTPException(413, "Document text exceeds limit")
+    if not body.question.strip():
+        raise HTTPException(422, "Question is required")
+    if len({p.page for p in body.pages}) != len(body.pages):
+        raise HTTPException(422, "Duplicate page numbers")
     citations = retrieve(body.question, body.pages)
     return {"matched": bool(citations), "answer": citations[0]["text"] if citations else "No sufficiently relevant passage found. Try a more specific question.", "citations": citations}
