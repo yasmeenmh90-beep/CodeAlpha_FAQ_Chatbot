@@ -311,3 +311,42 @@ Task 2 — Chatbot for FAQs
 [GitHub repository](https://github.com/yasmeenmh90-beep/CodeAlpha_FAQ_Chatbot)
 
 </div>
+
+
+## Advanced workspace modules (Phases 7–13)
+
+| Module | Capabilities |
+|---|---|
+| Voice Studio | Browser recognition, microphone visualization, editable transcript, speech playback |
+| Document Studio | PDF extraction, local preview, TF-IDF passage retrieval and page citations |
+| Multilingual chat | Six languages, optional external Google translation, bounded rule-based follow-up context |
+| AI Playground | TF-IDF and optional hybrid ranking, configurable experimental thresholds, labeled evaluation, JSON export |
+| System Monitor | Protected process-local request telemetry, latency, P95 and HTTP errors |
+| Support Tickets | SQLite persistence, explicit submission, protected queue and resolution notes |
+| Settings Studio | Shared theme, voice and context preferences, browser conversation storage and export controls |
+
+Document retrieval is extractive, not LLM generation. Scanned PDFs require OCR, which is not implemented. PDF limits: 5 MiB, 100 pages, 200,000 extracted characters. Non-English translation sends question and answer text to an external service. Browser speech recognition may also use external services. Answer language resets on reload.
+
+### Additional API routes
+
+| Method | Path | Access |
+|---|---|---|
+| POST | /api/documents/extract | Public |
+| POST | /api/documents/query | Public |
+| GET | /api/playground/modes | Public |
+| POST | /api/playground/rank | Public |
+| POST | /api/playground/evaluate | Public |
+| GET | /api/monitor | Admin |
+| POST | /api/tickets | Public |
+| GET | /api/admin/tickets | Admin |
+| PUT | /api/admin/tickets/{ticket_id} | Admin |
+
+### Quality and deployment safeguards
+
+Run backend tests from backend with `python -m pytest -q`, and frontend build from frontend with `npm run build`. GitHub Actions runs these checks on pushes to main and pull requests. Check the actual workflow result before releasing; the existence of a workflow is not proof of passing tests.
+
+Configure explicit comma-separated frontend origins using `QUERYMIND_CORS_ORIGINS`. Wildcard origins are excluded. Keep the existing admin token secret. Set `QUERYMIND_TICKET_DB` to a writable persistent SQLite path if needed. Default ticket database files are ignored by Git.
+
+API POST/PUT bodies are bounded to 2 MiB (5 MiB for PDF extraction). Fixed-window per-process IP limits are 10 write requests/minute for expensive endpoint groups and 60/minute for other API write groups. Shared proxy IPs, multiple workers and server restarts affect these limits. Production needs trusted proxy configuration, HTTPS, durable storage, upstream limits, dependency review and authentication appropriate to the deployment.
+
+Monitoring holds the last 500 completed API requests in memory, without request bodies or tokens. Ticket submission does not contact external support staff. Evaluation smoke-test examples reuse FAQ questions; they are not independent accuracy evidence. Browser data deletion does not erase server tickets.
