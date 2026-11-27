@@ -1,6 +1,7 @@
 """Deterministic, offline FAQ retrieval using NLTK + TF-IDF cosine similarity."""
 import re
 import os
+from difflib import get_close_matches
 import numpy as np
 from dataclasses import dataclass
 from typing import Any
@@ -47,6 +48,7 @@ class FAQEngine:
         )
         corpus = [" ".join([faq["question"], *faq.get("alternatives", [])]) for faq in faqs]
         self.matrix = self.vectorizer.fit_transform(corpus)
+        self.words = set(_WORD.findall(' '.join(corpus).lower())) | set(_STOP)
         self.semantic = None
         self.embeddings = None
         if os.getenv('QUERYMIND_SEMANTIC') == '1':
@@ -73,11 +75,26 @@ class FAQEngine:
         matches.sort(key=lambda item: item.score, reverse=True)
         return matches[:limit]
 
+    def correct(self, question: str) -> str:
+        def replace_word(match):
+            word = match.group().lower()
+            if len(word) < 5 or word in self.words or word.isdigit():
+                return match.group()
+            candidates = get_close_matches(word, sorted(self.words), n=2, cutoff=.85)
+            return candidates[0] if len(candidates) == 1 else match.group()
+        return re.sub(r"[A-Za-z]+", replace_word, question)
+
     def respond(self, question: str, category: str | None = None) -> dict[str, Any]:
         matches = self.search(question, category)
         best = matches[0] if matches else None
         confident = best is not None and best.score >= (max(self.threshold, 0.45) if self.semantic is not None else self.threshold)
+        corrected = self.correct(question) if not confident and self.semantic is None else question
+        if corrected != question:
+            revised = self.search(corrected, category)
+            if revised and revised[0].score >= max(self.threshold, .35):
+                matches, best, confident = revised, revised[0], True
         return {
+            "corrected_question": corrected if confident and corrected != question else None,
             "engine": "hybrid" if self.semantic is not None else "tfidf",
             "answer": best.faq["answer"] if confident else
                 "I couldn't find a reliable answer to that question. Try rephrasing it or selecting one of the suggested FAQs.",
