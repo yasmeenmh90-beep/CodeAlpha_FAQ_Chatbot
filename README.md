@@ -457,3 +457,52 @@ The Playground now includes a bundled benchmark loader and raw/production evalua
 | Mean retrieval latency | 0.51 ms | 0.75 ms |
 
 Production returned 27 correct predictions out of 28 development cases. The remaining error confused delivery-address modification with order tracking. The benchmark was used during development and is not independent validation. Timings exclude HTTP and external translation. Optional hybrid mode, latest hosted CI outcome and full browser interaction checks remain unverified. Local demonstration only; no live deployment is claimed.
+
+## Application showcase
+
+Actual screenshots from the final local demonstration.
+
+### AI Assistant
+
+![AI Assistant](docs/screenshots/01-assistant.jpg)
+
+### FAQ Library
+
+![FAQ Library](docs/screenshots/02-faq-library.jpg)
+
+### Analytics Dashboard
+
+![Analytics Dashboard](docs/screenshots/03-analytics.jpg)
+
+### Knowledge Studio
+
+![Knowledge Studio](docs/screenshots/04-knowledge-studio.jpg)
+
+### Voice Studio
+
+![Voice Studio](docs/screenshots/05-voice-studio.jpg)
+
+### Document Studio
+
+![Document Studio](docs/screenshots/06-document-studio.jpg)
+
+### Multilingual Assistance
+
+![Multilingual Assistance](docs/screenshots/07-multilingual.jpg)
+
+### AI Playground
+
+![AI Playground](docs/screenshots/08-playground.jpg)
+
+### System Monitor
+
+![System Monitor](docs/screenshots/09-system-monitor.jpg)
+
+### Support Tickets
+
+![Support Tickets](docs/screenshots/10-support-tickets.jpg)
+
+### Settings Studio
+
+![Settings Studio](docs/screenshots/11-settings.jpg)
+
