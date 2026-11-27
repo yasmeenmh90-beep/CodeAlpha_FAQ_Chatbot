@@ -143,3 +143,27 @@ def playground_rank(body: Experiment):
 @app.post("/api/playground/evaluate")
 def playground_evaluate(body: Evaluation):
     return evaluate(get_engine(), body)
+
+from .monitor import monitor, snapshot
+from .tickets import TicketCreate, TicketUpdate, create_ticket, list_tickets, update_ticket
+
+app.middleware("http")(monitor)
+
+@app.get("/api/monitor")
+def system_monitor(authorization: str = Header(default="")):
+    require_admin(authorization)
+    return {**snapshot(), "engine": "hybrid" if get_engine().semantic is not None else "tfidf"}
+
+@app.post("/api/tickets")
+def submit_ticket(body: TicketCreate):
+    return create_ticket(body)
+
+@app.get("/api/admin/tickets")
+def admin_tickets(authorization: str = Header(default="")):
+    require_admin(authorization)
+    return list_tickets()
+
+@app.put("/api/admin/tickets/{ticket_id}")
+def admin_update_ticket(ticket_id: str, body: TicketUpdate, authorization: str = Header(default="")):
+    require_admin(authorization)
+    return update_ticket(ticket_id, body)
