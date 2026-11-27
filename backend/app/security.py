@@ -1,3 +1,4 @@
+import asyncio
 from collections import OrderedDict
 from threading import Lock
 from time import monotonic
@@ -14,9 +15,9 @@ class RequestGuard:
             return await self.app(scope, receive, send)
         path = scope["path"]
         method = scope["method"]
-        if method in {"POST", "PUT"} and path.startswith("/api/"):
+        if (method in {"POST", "PUT"} or (method == "GET" and path.startswith(("/api/admin/", "/api/monitor")))) and path.startswith("/api/"):
             cap = 5 * 1024 * 1024 if path == "/api/documents/extract" else 2 * 1024 * 1024
-            limit = 10 if path.startswith(("/api/tickets", "/api/documents", "/api/playground", "/api/admin")) else 60
+            limit = 10 if path.startswith(("/api/tickets", "/api/documents", "/api/playground", "/api/admin", "/api/monitor")) else 60
             key = ((scope.get("client") or ("unknown", 0))[0], path.split("/")[2])
             now = monotonic()
             with self.lock:
@@ -28,9 +29,15 @@ class RequestGuard:
                     self.buckets.popitem(last=False)
             if count >= limit:
                 return await JSONResponse({"detail": "Rate limit exceeded"}, 429, headers={"Retry-After": "60"})(scope, receive, send)
+            if method == "GET":
+                return await self.app(scope, receive, send)
             data = bytearray()
+            deadline = monotonic() + 15
             while True:
-                message = await receive()
+                try:
+                    message = await asyncio.wait_for(receive(), timeout=max(0, deadline-monotonic()))
+                except asyncio.TimeoutError:
+                    return await JSONResponse({"detail": "Request body timeout"}, 408)(scope, receive, send)
                 if message["type"] == "http.disconnect":
                     return
                 block = message.get("body", b"")
